@@ -1,5 +1,6 @@
 var Movie = require('../models/movie.js');
 var Category = require('../models/category.js');
+var somesay = require('../../lib/somesay.js');
 
 //index page
 exports.index = function(req,res){
@@ -18,7 +19,8 @@ exports.index = function(req,res){
 			}
 			res.render('index',{
 				title:'imooc 首页',
-				categories: categories
+				categories: categories,
+				somesay: somesay.getSay()
 			});//视图引擎jade默认会返回text/html的内容类型和200的状态码
 		});
 };
