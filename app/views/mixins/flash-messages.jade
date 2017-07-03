@@ -1,0 +1,8 @@
+mixin flash-messages(message)
+	- if(message.warning)
+		div.alert-message.warning
+			p= message.warning
+	- if(message.infos)
+		- for info in message.infos
+			div(data-alert='alert').alert-message.success
+				p= info

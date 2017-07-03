@@ -1,0 +1,9 @@
+#ignore packages installed by npm
+node_modules
+*~
+.DS_Store
+
+#把任何想让Git默认忽略的文件或目录写在该文件里(防止不慎把不想添加的东西添加到Git中)
+#put any other files you don't want to check in here,
+#支持通配符，如a.js~
+#such as .DS_Store(OSX),*.bak, etc.

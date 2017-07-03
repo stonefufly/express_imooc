@@ -1,0 +1,35 @@
+extends ../layout
+
+block content
+	.container
+		.row
+			- each cat in categories
+				.panel.panel-default
+					.panel-heading
+						h3 
+							a(href='/results?cat=#{cat._id}&p=0') #{cat.name}
+					.panel-body
+						- if (cat.movies && cat.movies.length > 0)
+							- for item in cat.movies
+								.col-md-2
+									.thumbnail
+										a(href="/movie/#{item._id}/find")
+											- if (item.poster.indexOf('http') > -1)
+												img(src="#{item.poster}", alt="#{item.title}")
+											- else
+												img(src="/upload/#{item.poster}", alt="#{item.title}")
+										.caption
+											h3 #{item.title}
+											p: a.btn.btn-primary(href="/movie/#{item._id}/find", role="button")
+												|观看预告片
+						- else
+							p 
+								|	You don't 
+								|	hava any
+								|	Movies!
+
+		p
+			a(href='/admin/movie/new',class='btn primary') Add a Movie
+
+	script.
+		alert('Inline JavaScript in Jade')
