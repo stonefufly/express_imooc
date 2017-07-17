@@ -4,8 +4,9 @@ var Movie = require('../app/controllers/movie');
 var Comment = require('../app/controllers/comment');
 var Category = require('../app/controllers/category');
 
-var multipart = require('connect-multiparty');//用于处理文件上传类型（enctype="multipart/form-data"）的表单提交的中间件
-var multipartMiddleware = multipart();//变成一个处理文件上传类型表单的中间件
+//利用Connect内置中间件multipart来处理上传，但是现在multipart已经从Connect中移除了，所以不建议使用这种方式。
+// var multipart = require('connect-multiparty');//用于处理文件上传类型（enctype="multipart/form-data"）的表单提交的中间件
+// var multipartMiddleware = multipart();//变成一个处理文件上传类型表单的中间件
 
 module.exports = function(app){
 
@@ -21,6 +22,11 @@ module.exports = function(app){
 
 	//给路由匹配控制器
 
+	//路由中指定的路径（比如/foo）最终会被Express转换成一个正则表达式
+
+	//匹配所有路径的路由
+	app.all('/*', Index.allBefore);
+	
 	//Index
 	app.get('/', Index.index);
 
@@ -29,13 +35,11 @@ module.exports = function(app){
 
 	app.post('/user/signup', User.signup);//弹窗注册
 
-	app.get('/signin', User.showSignin);//显示页面登录页面
-
-	app.get('/signup', User.showSignup);//显示页面注册页面
-
 	app.get('/admin/user/list', User.signinRequired, User.adminRequired, User.list);//查看此页面需要1.已登录状态，2.管理员权限
 
 	app.get('/logout', User.logout);//登出
+
+	app.get('/dealersMapData', User.dealersMapData);//代理商地图
 
 	//Movie
 	app.get('/movie/:id/find', Movie.detail);
@@ -44,7 +48,9 @@ module.exports = function(app){
 
 	app.get('/admin/movie/update/:id', User.signinRequired, User.adminRequired, Movie.update)
 
-	app.post('/admin/movie', multipartMiddleware, User.signinRequired, User.adminRequired,Movie.savePoster, Movie.save);//先执行处理文件上传表单中间件，再执行文件上传（Movie.savePoster）逻辑中间件，完成后再执行保存或修改（Movie.save）电影中间件
+	app.post('/admin/movie', User.signinRequired, User.adminRequired, Movie.savePoster, Movie.save);//先执行文件上传（Movie.savePoster）逻辑中间件，完成后再执行保存或修改（Movie.save）电影中间件
+
+	//app.post('/admin/movie', multipartMiddleware, User.signinRequired, User.adminRequired,Movie.savePoster, Movie.save);//先执行处理文件上传表单中间件，再执行文件上传（Movie.savePoster）逻辑中间件，完成后再执行保存或修改（Movie.save）电影中间件
 
 	app.get('/admin/movie/list', User.signinRequired, User.adminRequired, Movie.list);
 
@@ -67,5 +73,9 @@ module.exports = function(app){
 	app.get('/zhida_*',function(req, res){
 		
 	});
+
+	app.get('/xmlData', Index.xmlData);
+
+	//app.put(.....//用于更新数据
 
 }

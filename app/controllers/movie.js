@@ -4,6 +4,10 @@ var Category = require('../models/category.js');
 var _ = require('underscore');
 var fs = require('fs');
 var path = require('path');
+var formidable = require('formidable');
+
+var credentials = require('../../lib/credentials.js');
+var emailService = require('../../lib/email.js')(credentials);
 
 //detail page
 exports.detail = function(req,res){
@@ -27,6 +31,9 @@ exports.detail = function(req,res){
 			.populate('reply.from reply.to', 'name')//对评论者和被评论者的名字的关联查询
 			.exec(function(err, comments){//完成后执行此函数
 				//console.log('comments: '+comments);
+				if(err){
+					return next();//最终将会落入404
+				}
 				res.render('detail',{
 					title:'imooc 详情页'+ movie.title,
 					movie: movie,
@@ -70,38 +77,103 @@ exports.update = function(req,res){
 //admin poster
 exports.savePoster = function(req, res, next){
 
-	console.log(req.files);
-	var posterData = req.files.uploadPoster;//通过name获取到上传的文件（利用引入的app.use(express.multipart())中间件）
-	var filePath = posterData.path;//获取文件的路径
-	var originalFilename = posterData.originalFilename;//获取文件的原始名字
+	//利用Connect内置中间件multipart来处理上传，但是现在multipart已经从Connect中移除了，所以不建议使用这种方式。
+	// console.log(req.files);
+	// var posterData = req.files.uploadPoster;//通过name获取到上传的文件（利用引入的app.use(express.multipart())中间件）
+	// var filePath = posterData.path;//获取文件的路径
+	// var originalFilename = posterData.originalFilename;//获取文件的原始名字
 
-	if(originalFilename){
-		//有图片传入
-		fs.readFile(filePath, function(err, data){//data是获取文件的二进制数据
+	// if(originalFilename){
+	// 	//有图片传入
+	// 	fs.readFile(filePath, function(err, data){//data是获取文件的二进制数据
 
-			var timestamp = Date.now();//创建时间戳来命名上传来的文件
-			var type = posterData.type.split('/')[1];//获取文件的type值（posterData.type是'image/png'）切割后的文件后缀（png）
-			var poster = timestamp + '.' + type;//文件新名
-			//存入服务器的文件中
-			var newPath = path.join(__dirname, '../../', '/public/upload/' + poster);//生成服务器存文件的地址
-			//__dirname 这个全局变量解析为正在执行的脚本的所在目录，/home/sites/app.js中的脚本中的__dirname解析为/home/sites
-			fs.writeFile(newPath, data, function(err){//内存将文件写到服务器的硬盘上
+	// 		var timestamp = Date.now();//创建时间戳来命名上传来的文件
+	// 		var type = posterData.type.split('/')[1];//获取文件的type值（posterData.type是'image/png'）切割后的文件后缀（png）
+	// 		var poster = timestamp + '.' + type;//文件新名
+	// 		//存入服务器的文件中
+	// 		var newPath = path.join(__dirname, '../../', '/public/upload/' + poster);//生成服务器存文件的地址
+	// 		//__dirname 这个全局变量解析为正在执行的脚本的所在目录，/home/sites/app.js中的脚本中的__dirname解析为/home/sites
+	// 		fs.writeFile(newPath, data, function(err){//内存将文件写到服务器的硬盘上
 
-				if(!err){
-					req.poster = poster;//将写入后的名字挂到request中
-				}
-				next();//进入下个流程（Movie.save）
-			});
+	// 			if(!err){
+	// 				req.poster = poster;//将写入后的名字挂到request中
+	// 			}
+	// 			next();//进入下个流程（Movie.save）
+	// 		});
 			
-		});
-	}
-	else{
-		next();
-	}
+	// 	});
+	// }
+	// else{
+	// 	next();
+	// }
+
+	//使用formidable处理文件上传
+	var form = new formidable.IncomingForm();
+
+	form.parse(req, function(err, fields, files){
+
+		if(err){
+			return res.redirect(500, '500');
+			//？？？此处应该ajax返回错误信息到表单页
+		}
+		//console.log('received fields:' + JSON.stringify(fields));
+		//console.log('received files:' + JSON.stringify(files));
+		req.body.movie = fields;//将除了文件数据以外的的表单数据添加到req的body中@stone
+		
+		var file = files.uploadPoster;//获取上传文件数据对象（表单中type=file的input标签的id是uploadPoster）@stone
+		var filePath = file.path;//获取文件的路径
+		var filename = file.name;//获取文件的原始名字
+		
+		if(filename && file.size < 1024000){
+			//有图片传入且大小在规定范围
+			fs.readFile(filePath, function(err, data){//data是获取文件的二进制数据
+
+				var timestamp = file.lastModifiedDate.getTime();//获取文件上传时间戳来命名上传来的文件
+				//console.log(typeof file.lastModifiedDate);
+
+				var type = file.type.split('/')[1];//获取文件的type值（file.type是'image/png'）切割后的文件后缀（png）
+				var poster = timestamp + '.' + type;//文件新名
+				//存入服务器的文件中
+				var uploadDir = path.join(__dirname, '../../', '/public/upload/');
+				var upMovieImgDir = uploadDir + '/movie';
+				//目录不存在则创建
+				fs.existsSync(uploadDir) || fs.mkdirSync(uploadDir);
+				fs.existsSync(upMovieImgDir) || fs.mkdirSync(upMovieImgDir);
+				
+				var newPath = path.join(upMovieImgDir, '/' , poster);//生成服务器存文件的地址
+				//__dirname 这个全局变量解析为正在执行的脚本的所在目录，/home/sites/app.js中的脚本中的__dirname解析为/home/sites
+				fs.writeFile(newPath, data, function(err){//内存将文件写到服务器的硬盘上
+
+					if(!err){
+
+						req.poster = poster;//将写入后的名字挂到request中
+					}else{
+						console.log('文件写入服务器硬盘时出错');
+						next(new Error('文件写入服务器硬盘时出错'));
+					}
+					next();//进入下个流程（Movie.save）
+				});
+				
+			});
+		}
+		else{
+			next();
+		}
+	});
+	
 }
 //admin post movie
-exports.save = function(req,res){
-	var id = req.body.movie._id;//console.log(">>>>>>>>>"+JSON.stringify(id));
+exports.save = function(req, res){
+
+	//？？？这里应该判断错误并处理
+	// if(err){
+	// 	//出错时给开发者发送email通知
+	// 	emailService.emailError('添加电影数据出错！', __filename, err);
+
+	// 	return res.redirect('500');
+	// }
+	//console.log(">>>>>>>>>"+JSON.stringify(req.body));
+	var id = req.body.movie._id;
 	var movieObj = req.body.movie;//console.log(">>>>>>>>>"+JSON.stringify(movieObj));
 	var _movie;
 
@@ -125,6 +197,7 @@ exports.save = function(req,res){
 					console.log(err);
 				}
 			});
+			//！！！！！！！！少写了一个修改影片类型里对应的电影的数组的逻辑！！！！！！！！
 		});
 	}else{
 		//添加
@@ -178,10 +251,23 @@ exports.list = function(req,res){
 		if(err){
 			console.log(err);
 		}
-
+		//将数据库中返回的数据映射一下，并且只传递视图需要的数据(做必要的转换，例如对价格四舍五入处理)
+		var movies_view = movies.map(function(movie){
+			return {
+				_id: movie._id,
+				title: movie.title,
+				doctor: movie.doctor,
+				country: movie.country,
+				year: movie.year,
+				meta: {updateAt: movie.meta.updateAt},
+				//poster: movie.poster,//这个属性视图不需要，所以不要将未映射的数据库对象直接传给视图（数据库对象的这个属性就不需要传给视图）
+				//language: language,//这个属性视图也不需要
+				pv_str: movie.getPvString()
+			}
+		});
 		res.render('list',{
 			title:'imooc 列表页',
-			movies: movies
+			movies: movies_view
 		});
 	});
 };

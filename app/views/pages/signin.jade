@@ -9,10 +9,10 @@ block content
 					.modal-body
 						.form-group
 							label(for="signinName") 用户名
-							input#signinName.form-control(name="user[name]", type="text")
+							input#signinName.form-control(name="user[name]", type="text", required)
 						.form-group
 							label(for="signinPassword") 密码
-							input#signinPassword.form-control(name="user[password]", type="text")
+							input#signinPassword.form-control(name="user[password]", type="text", required)
 					.modal-footer
 						button.btn.btn-default(type="button",data-dismiss="modal") 关闭
 						button.btn.btn-success(type="submit") 登录

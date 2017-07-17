@@ -17,7 +17,7 @@ block content
 											- if (item.poster.indexOf('http') > -1)
 												img(src="#{item.poster}", alt="#{item.title}")
 											- else
-												img(src="/upload/#{item.poster}", alt="#{item.title}")
+												img(src="/upload/movie/#{item.poster}", alt="#{item.title}")
 										.caption
 											h3 #{item.title}
 											p: a.btn.btn-primary(href="/movie/#{item._id}/find", role="button")
@@ -31,6 +31,14 @@ block content
 		p
 			a(href='/admin/movie/new',class='btn primary') Add a Movie
 		span #{somesay}
+		br
+		span #{weathers.weatherinfos[0].temp1}
+		|-
+		span #{weathers.weatherinfos[0].temp2}
+		|&nbsp;&nbsp;&nbsp;
+		span #{weathers.weatherinfos[0].weather}
 
+		p
+			a(href='/dealersMapData',class='btn primary') get DealersMap
 	script.
-		alert('Inline JavaScript in Jade')
+		//alert('Inline JavaScript in Jade')

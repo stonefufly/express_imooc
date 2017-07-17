@@ -50,6 +50,10 @@ MovieSchema.pre('save', function(next){
 	next();//存储流程继续走下去
 });
 
+MovieSchema.methods.getPvString = function(){
+	return this.pv + '次';
+}
+
 //为模式添加静态方法（这些方法不会与数据库直接交互，只有经历了模型编译并实例化后才可以）
 MovieSchema.statics = {
 

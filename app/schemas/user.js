@@ -15,6 +15,7 @@ var UserSchema = new Schema({
 		type: String
 	},
 	password: String,
+	email: String,
 	role: {
 		type: Number,
 		default: 0 //0是普通用户权限

@@ -24,11 +24,11 @@ block content
 								td #{item.country}
 								td #{item.year}
 								td #{moment(item.meta.updateAt).format('MM/DD/YYYY')}
-								td #{item.pv}
+								td #{item.pv_str}
 								td: a(target="_blank", href="/movie/#{item._id}/find") 查看
 								td: a(target="_blank", href="/admin/movie/update/#{item._id}") 修改
 								td
 									button.btn.btn-danger.del(type="button", data-id="#{item._id}") 删除
 					- else
 						p You don't have any movies
-	script(src="/js/admin.js")
+	//- script(src="/js/admin.js")

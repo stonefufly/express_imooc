@@ -32,10 +32,13 @@
 				.modal-body
 					.form-group
 						label(for="signupName") 用户名
-						input#signupName.form-control(name="user[name]", type="text")
+						input#signupName.form-control(name="user[name]", type="text", required)
 					.form-group
 						label(for="signupPassword") 密码
-						input#signupPassword.form-control(name="user[password]", type="text")
+						input#signupPassword.form-control(name="user[password]", type="text", required)
+					.form-group
+						label(for="signupEmail") 邮箱
+						input#signupEmail.form-control(name="user[email]", type="email", required)
 				.modal-footer
 					button.btn.btn-default(type="button",data-dismiss="modal") 关闭
 					button.btn.btn-success(type="submit") 提交
@@ -47,10 +50,10 @@
 				.modal-body
 					.form-group
 						label(for="signinName") 用户名
-						input#signinName.form-control(name="user[name]", type="text")
+						input#signinName.form-control(name="user[name]", type="text", required)
 					.form-group
 						label(for="signinPassword") 密码
-						input#signinPassword.form-control(name="user[password]", type="text")
+						input#signinPassword.form-control(name="user[password]", type="text", required)
 				.modal-footer
 					button.btn.btn-default(type="button",data-dismiss="modal") 关闭
 					button.btn.btn-success(type="submit") 提交

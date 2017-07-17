@@ -1,4 +1,6 @@
 var User = require('../models/user.js');//获取user模型
+var Q = require('q');
+var credentials = require('../../lib/credentials.js');
 
 //弹窗登录
 exports.signin = function(req, res){
@@ -6,6 +8,7 @@ exports.signin = function(req, res){
 	var _user = req.body.user;
 	var name = _user.name;
 	var password = _user.password;
+	//console.log('>>>>>>>>'+JSON.stringify(req.cookie.userid));
 
 	User.findOne({name:name},function(err, user){
 		if(err){
@@ -14,7 +17,7 @@ exports.signin = function(req, res){
 		if(!user){
 			//无此用户名，登录失败
 			console.log('here is not have this name');
-			return res.redirect('/signup');
+			return res.redirect(303,'/signup');
 		}
 
 		user.comparePassword(password, function(err, isMatch){
@@ -28,11 +31,11 @@ exports.signin = function(req, res){
 				//将user存到session中
 				req.session.user = user;
 
-				return res.redirect('/');
+				return res.redirect(303,'/');
 			}else{
 				//密码不正确，登录失败
 				console.log('password is not matched');
-				return res.redirect('/signin');
+				return res.redirect(303,'/signin');
 			}
 		});
 	});
@@ -65,22 +68,7 @@ exports.signup = function(req, res){
 	});
 	
 };
-//显示页面登录页面
-exports.showSignin = function(req, res){
 
-	res.render('signin',{
-			title:'登录页面'
-		});
-	
-};
-//显示页面注册页面
-exports.showSignup = function(req, res){
-
-	res.render('signup',{
-			title:'注册页面'
-		});
-	
-};
 //logout登出
 exports.logout = function(req, res){
 
@@ -126,4 +114,8 @@ exports.adminRequired = function(req, res, next){
 	}
 	
 	next();
+}
+exports.dealersMapData = function(req, res){
+
+	res.render('dealers_map', { baiduApiKey: credentials.baiduApiKey });
 }

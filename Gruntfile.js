@@ -1,4 +1,22 @@
 module.exports = function(grunt){
+
+	//加载插件
+	[
+		'grunt-contrib-watch',//有文件添加修改或删除就会重新执行在它里面注册好的任务
+		'grunt-nodemon',//事实监听入口文件（app.js）有改动的话就自动重启入口文件（app.js）
+		'grunt-concurrent',//针对慢任务开发的插件，优化慢任务构建的时间，跑多个阻塞的任务
+		'grunt-mocha-test',//单元测试，用的是mocha框架
+
+		'grunt-contrib-less',//less编译
+	 	'grunt-contrib-uglify',//js压缩
+	 	'grunt-contrib-cssmin',
+	 	'grunt-hashres',
+	  	'grunt-contrib-jshint',//约束编程规范的，检查语法的
+
+	].forEach(function(task){
+		grunt.loadNpmTasks(task);
+	});
+
 	//配置任务
 	grunt.initConfig({
 		watch:{
@@ -47,19 +65,48 @@ module.exports = function(grunt){
 	          optimization: 2
 	        },
 	        files: {
-	          'public/build/index.css': 'public/less/index.less'
+	          'public/css/index.css': 'less/index.less',
+	          'public/css/style.css': 'less/style.less'
+	        }
+	      }
+	    },
+	    
+	    //一旦有大量的js和css，打包和缩小会产生极大的性能提升
+	    //第三方库（例如Bootstrap）同样这么打包以提高性能
+	    uglify: {//js压缩配置
+	      all: {
+	        files: {
+	          'public/build/app.min.js': ['public/js/**/*.js']//将所有js压缩到app.min.js文件中
 	        }
 	      }
 	    },
 
-	    uglify: {//js压缩配置
-	      development: {
-	        files: {
-	          'public/build/admin.min.js': ['public/js/admin.js'],
-	          'public/build/detail.min.js': ['public/js/detail.js']//此数组有多个文件的话会配置压缩为一个文件
-	        }
-	      }
-	    },
+		cssmin: {//css压缩配置
+			combine: {
+				files: {
+					'public/css/app.css': ['public/css/**/*.css', '!public/css/app*.css']//将所有css放到一个app.css中，不包含它自己生成的文件
+				}
+			},
+			minify: {										//然后缩小合并css到app.min.css文件中
+				src: 'public/css/app.css',
+				dest: 'public/build/app.min.css',
+			},
+		},
+		//给打包和缩小的css和js文件添加指纹，以便在更新网站时可以马上看到这些变化，而不是要等到缓存的版本到期
+		hashres: {
+			options: {
+				fileNameFormat: '${name}.${hash}.${ext}'
+			},
+			all: {
+				src: [//要重命名的文件，hashres会生成文件的哈希并追加到文件名上
+					'public/build/app.min.js',
+					'public/build/app.min.css',
+				],
+				dest: [
+					'config.js',
+				]
+			},
+		},
 
 		nodemon: {
 			dev: { //开发环境
@@ -95,15 +142,7 @@ module.exports = function(grunt){
 		
 	});
 
-	//加载插件
-	grunt.loadNpmTasks('grunt-contrib-watch');//有文件添加修改或删除就会重新执行在它里面注册好的任务
-	grunt.loadNpmTasks('grunt-nodemon');//事实监听入口文件（app.js）有改动的话就自动重启入口文件（app.js）
-	grunt.loadNpmTasks('grunt-concurrent');//针对慢任务开发的插件，优化慢任务构建的时间，跑多个阻塞的任务
-	grunt.loadNpmTasks('grunt-mocha-test');//单元测试，用的是mocha框架
-
-	grunt.loadNpmTasks('grunt-contrib-less');//less编译
- 	grunt.loadNpmTasks('grunt-contrib-uglify');//js压缩
-  	grunt.loadNpmTasks('grunt-contrib-jshint');//约束编程规范的，检查语法的
+	
 
 	//配置grunt参数
 	grunt.option('force',true);//开发中不会因为语法错误和警告而中断整个grunt的整个服务
@@ -112,4 +151,6 @@ module.exports = function(grunt){
 	grunt.registerTask('default',['concurrent']);
 	//注册测试任务
 	grunt.registerTask('test',['mochaTest']);//mochaTest为调用的任务的名字
+	//注册一个生成静态资源的任务
+	grunt.registerTask('static', ['less', 'cssmin', 'uglify', 'hashres']);
 }
